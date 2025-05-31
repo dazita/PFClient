@@ -84,7 +84,6 @@ public class AddListingDialog extends JDialog {
         for (String line : lines) {
             lineField.addItem(line);
         }
-        // Clear model field when brand changes
         modelField.removeAllItems();
     }
 
@@ -100,20 +99,27 @@ public class AddListingDialog extends JDialog {
         setLayout(new BorderLayout());
         setSize(500, 600);
         setLocationRelativeTo(getParent());
-
         JPanel formPanel = createFormPanel();
         JPanel buttonPanel = createButtonPanel();
-
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private JPanel createFormPanel() {
+        JPanel panel = createBaseFormPanel();
+        addVehicleFields(panel);
+        addImageSection(panel);
+        return panel;
+    }
+
+    private JPanel createBaseFormPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        return panel;
+    }
 
-        // Add fields to panel
+    private void addVehicleFields(JPanel panel) {
         addFormField(panel, "Marca:", brandField);
         addFormField(panel, "Línea:", lineField);
         addFormField(panel, "Modelo:", modelField);
@@ -122,19 +128,22 @@ public class AddListingDialog extends JDialog {
         addFormField(panel, "Precio:", priceField);
         addFormField(panel, "Ubicación:", locationField);
         addFormField(panel, "Tipo de Vehículo:", vehicleTypeCombo);
+    }
 
-        // Image selection button
-        JButton selectImageButton = createStyledButton("Seleccionar Imagen");
-        selectImageButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        selectImageButton.addActionListener(e -> selectImage());
-
+    private void addImageSection(JPanel panel) {
+        JButton selectImageButton = createImageButton();
         panel.add(Box.createVerticalStrut(10));
         panel.add(selectImageButton);
         panel.add(Box.createVerticalStrut(5));
         panel.add(imageLabel);
         panel.add(Box.createVerticalStrut(20));
+    }
 
-        return panel;
+    private JButton createImageButton() {
+        JButton button = createStyledButton("Seleccionar Imagen");
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.addActionListener(e -> selectImage());
+        return button;
     }
 
     private void selectImage() {
@@ -148,25 +157,31 @@ public class AddListingDialog extends JDialog {
 
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        
-        JButton cancelButton = new JButton("Cancelar");
-        JButton saveButton = new JButton("Guardar");
-
-        // Style the save button
-        saveButton.setBackground(BUTTON_COLOR);
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
-        saveButton.setFocusPainted(false);
-        saveButton.setBorderPainted(false);
-        saveButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        cancelButton.addActionListener(e -> dispose());
-        saveButton.addActionListener(e -> saveListing());
-
-        panel.add(cancelButton);
-        panel.add(saveButton);
-
+        panel.add(createCancelButton());
+        panel.add(createSaveButton());
         return panel;
+    }
+
+    private JButton createCancelButton() {
+        JButton button = new JButton("Cancelar");
+        button.addActionListener(e -> dispose());
+        return button;
+    }
+
+    private JButton createSaveButton() {
+        JButton button = new JButton("Guardar");
+        styleSaveButton(button);
+        button.addActionListener(e -> saveListing());
+        return button;
+    }
+
+    private void styleSaveButton(JButton button) {
+        button.setBackground(BUTTON_COLOR);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void addFormField(JPanel panel, String label, JComponent field) {
@@ -229,7 +244,6 @@ public class AddListingDialog extends JDialog {
         return button;
     }
 
-    // Getters to access form values
     public String getBrand() { return (String) brandField.getSelectedItem(); }
     public String getLine() { return (String) lineField.getSelectedItem(); }
     public String getModel() { return (String) modelField.getSelectedItem(); }

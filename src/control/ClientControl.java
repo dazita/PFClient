@@ -285,4 +285,32 @@ public class ClientControl {
         String filteredListingsJson = connection.receive();
         chargeListings(filteredListingsJson);
     }
+
+    public Object[] getListingFullInfo(String id) {
+        JsonObject listingJson = new JsonObject();
+        listingJson.addProperty("id", id);
+        connection.send("GET_LISTING_FULL_INFO:" + listingJson.toString());
+        String fullInfoJson = connection.receive();
+        return fullInfoToArray(fullInfoJson);
+    }
+
+    public Object[] fullInfoToArray(String fullInfoJson){
+        JsonObject obj = JsonParser.parseString(fullInfoJson).getAsJsonObject();
+        Object[] fullInfoInArray = new Object[10];
+        buildArray(obj, fullInfoInArray);
+        return fullInfoInArray;
+    }
+
+    public void buildArray(JsonObject obj, Object[] objects) {
+        objects[0] = obj.get("reference").getAsString();
+        objects[1] = obj.get("vehicleType").getAsString();
+        objects[2] = obj.get("model").getAsString();
+        objects[3] = obj.get("mileage").getAsInt();
+        objects[4] = obj.get("price").getAsDouble();
+        objects[5] = decodeBase64(obj.get("carImage").getAsString());
+        objects[6] = obj.get("description").getAsString();
+        objects[7] = obj.get("location").getAsString();
+        objects[8] = obj.get("id").getAsInt();
+        objects[9] = obj.get("ownerPhoneNumber").getAsInt();
+    }
 }

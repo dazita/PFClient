@@ -4,10 +4,9 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import control.ClientControl;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class MainPanel extends JPanel {
-    // Constants
+
     private static final int LISTING_WIDTH = 400;
     private static final int LISTING_HEIGHT = 250;
     private static final Color BUTTON_COLOR = new Color(46, 139, 87);
@@ -18,26 +17,38 @@ public class MainPanel extends JPanel {
     private static final Font NORMAL_FONT = new Font("Arial", Font.PLAIN, 14);
     private static final Font BUTTON_FONT = new Font("Arial", Font.BOLD, 14);
     private static final int MIN_COLUMNS = 2;
-    private static final int ASIDE_WIDTH = 250; // Ancho fijo del panel lateral
+    private static final int ASIDE_WIDTH = 250;
     private static final int IMAGE_HEIGHT = 150;
     private static final int IMAGE_WIDTH = 200;
 
-    // Components
-    private final AsidePanel asidePanel;
-    private final JPanel listingsPanel;
-    private final JScrollPane scrollPane;
+    private AsidePanel asidePanel;
+    private JPanel listingsPanel;
+    private JScrollPane scrollPane;
+    private ClientControl control;
 
-    //TO-DO: cada que el mainPanel se inicialice, pedir 10 listing existentes
     public MainPanel(MainFrame mainFrame, ClientControl control) {
-        this.asidePanel = new AsidePanel(control);
-        this.listingsPanel = createListingsPanel();
-        this.scrollPane = createScrollPane();
+        this.control = control;
+        initializeComponents(control);
         initializePanel();
     }
 
+    private void initializeComponents(ClientControl control) {
+        this.asidePanel = new AsidePanel(control);
+        this.listingsPanel = createListingsPanel();
+        this.scrollPane = createScrollPane();
+    }
+
     private void initializePanel() {
+        setupPanelProperties();
+        addComponents();
+    }
+
+    private void setupPanelProperties() {
         setBackground(Color.WHITE);
         setLayout(new BorderLayout());
+    }
+
+    private void addComponents() {
         add(scrollPane, BorderLayout.CENTER);
         add(asidePanel, BorderLayout.EAST);
     }
@@ -50,10 +61,14 @@ public class MainPanel extends JPanel {
 
     private JScrollPane createScrollPane() {
         JScrollPane scrollPane = new JScrollPane(listingsPanel);
+        configureScrollPane(scrollPane);
+        return scrollPane;
+    }
+
+    private void configureScrollPane(JScrollPane scrollPane) {
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        return scrollPane;
     }
 
     public void addListing(String reference, double price, int year, int km, String location, String id, Image image) {
@@ -62,23 +77,26 @@ public class MainPanel extends JPanel {
     }
 
     private JPanel createListingPanel(String reference, double price, int year, int km, String location, String id, Image image) {
+        JPanel panel = createBasePanel();
+        panel.add(createImagePanel(image), BorderLayout.WEST);
+        panel.add(createInfoPanel(reference, price, year, km, location, id), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createBasePanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(createPanelBorder());
         panel.setPreferredSize(new Dimension(LISTING_WIDTH, LISTING_HEIGHT));
+        return panel;
+    }
 
-        // Panel izquierdo para la imagen
-        JPanel imagePanel = createImagePanel(image);
-        panel.add(imagePanel, BorderLayout.WEST);
-
-        // Panel derecho para la información
+    private JPanel createInfoPanel(String reference, double price, int year, int km, String location, String id) {
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.setBackground(Color.WHITE);
         infoPanel.add(createContentPanel(reference, price, year, km, location), BorderLayout.CENTER);
         infoPanel.add(createButtonPanel(id), BorderLayout.SOUTH);
-        panel.add(infoPanel, BorderLayout.CENTER);
-
-        return panel;
+        return infoPanel;
     }
 
     private JPanel createImagePanel(Image image) {
@@ -88,23 +106,26 @@ public class MainPanel extends JPanel {
         panel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         
         if (image != null) {
-            Image scaledImage = image.getScaledInstance(
-                IMAGE_WIDTH, 
-                IMAGE_HEIGHT, 
-                Image.SCALE_SMOOTH
-            );
-            JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-            imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            panel.add(imageLabel);
+            addImageToPanel(panel, image);
         } else {
-            // Placeholder si no hay imagen
-            JLabel placeholderLabel = new JLabel("Sin imagen");
-            placeholderLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            placeholderLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-            panel.add(placeholderLabel);
+            addPlaceholderToPanel(panel);
         }
         
         return panel;
+    }
+
+    private void addImageToPanel(JPanel panel, Image image) {
+        Image scaledImage = image.getScaledInstance(IMAGE_WIDTH, IMAGE_HEIGHT, Image.SCALE_SMOOTH);
+        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(imageLabel);
+    }
+
+    private void addPlaceholderToPanel(JPanel panel) {
+        JLabel placeholderLabel = new JLabel("Sin imagen");
+        placeholderLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        placeholderLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        panel.add(placeholderLabel);
     }
 
     private Border createPanelBorder() {
@@ -119,13 +140,16 @@ public class MainPanel extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
 
-        addLabel(panel, "Referencia: " + reference, TITLE_FONT);
+        addContentLabels(panel, reference, price, year, km, location);
+        return panel;
+    }
+
+    private void addContentLabels(JPanel panel, String reference, double price, int year, int km, String location) {
+        addLabel(panel, reference, TITLE_FONT);
         addLabel(panel, String.format("Precio: $%,.2f", price), NORMAL_FONT);
         addLabel(panel, "Año: " + year, NORMAL_FONT);
         addLabel(panel, String.format("Kilometraje: %,d km", km), NORMAL_FONT);
         addLabel(panel, "Ubicación: " + location, NORMAL_FONT);
-
-        return panel;
     }
 
     private void addLabel(JPanel panel, String text, Font font) {
@@ -145,16 +169,42 @@ public class MainPanel extends JPanel {
 
     private JButton createSaberMasButton(String id) {
         JButton button = new JButton("Saber Más");
+        configureSaberMasButton(button, id);
+        return button;
+    }
+
+    private void configureSaberMasButton(JButton button, String id) {
         button.setActionCommand(id);
         styleButton(button);
         addButtonHoverEffect(button);
-        
-        // Agregar ActionListener que imprime el ID
-        button.addActionListener(e -> {
-            System.out.println("ID del vehículo: " + id);
-        });
-        
-        return button;
+        button.addActionListener(e -> handleSaberMasClick(id));
+    }
+
+    private void handleSaberMasClick(String id) {
+        try {
+            Object[] listingInfo = control.getListingFullInfo(id);
+            if (listingInfo != null) {
+                ListingDetailsDialog dialog = new ListingDetailsDialog((Frame)SwingUtilities.getWindowAncestor(this));
+                dialog.setListingDetails(
+                    (String)listingInfo[0],  // reference
+                    (String)listingInfo[1],  // vehicleType
+                    (String)listingInfo[2],  // model
+                    (int)listingInfo[3],     // mileage
+                    (double)listingInfo[4],  // price
+                    (Image)listingInfo[5],   // carImage
+                    (String)listingInfo[6],  // description
+                    (String)listingInfo[7],  // location
+                    (int)listingInfo[8],     // id
+                    (int)listingInfo[9]      // ownerPhoneNumber
+                );
+                dialog.setVisible(true);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error al obtener los detalles del vehículo",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void styleButton(JButton button) {
@@ -199,13 +249,8 @@ public class MainPanel extends JPanel {
     }
 
     private int calculateColumns() {
-        // Obtener el ancho disponible restando el ancho del panel lateral
         int availableWidth = getWidth() - ASIDE_WIDTH;
-        
-        // Calcular cuántas columnas caben en el espacio disponible
         int columns = availableWidth / (LISTING_WIDTH + PADDING * 2);
-        
-        // Asegurar al menos MIN_COLUMNS columnas
         return Math.max(MIN_COLUMNS, columns);
     }
 

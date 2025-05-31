@@ -27,13 +27,20 @@ public class MainFrame extends JFrame {
     }
 
     private void initializeFrame() {
+        configureFrameProperties();
+        setupWindowListener();
+    }
+
+    private void configureFrameProperties() {
         setTitle("VehiculosColombia");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setMinimumSize(new Dimension(1000, 700));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        
+    }
+
+    private void setupWindowListener() {
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {

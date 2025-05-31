@@ -17,11 +17,11 @@ public class HeaderPanel extends JPanel {
     private static final int SEARCH_FIELD_WIDTH = 300;
     private static final int SEARCH_FIELD_HEIGHT = 35;
     
-    private final JTextField searchField;
-    private final JButton loginButton;
-    private final JButton registerButton;
-    private final JLabel usernameLabel;
-    private final JPopupMenu userMenu;
+    private JTextField searchField;
+    private JButton loginButton;
+    private JButton registerButton;
+    private JLabel usernameLabel;
+    private JPopupMenu userMenu;
     private LoginWindow loginWindow;
     private RegisterWindow registerWindow;
     private JPanel authPanel;
@@ -31,47 +31,81 @@ public class HeaderPanel extends JPanel {
     
     public HeaderPanel(ClientControl control) {
         this.control = control;
+        initializeComponents();
+        initializePanel();
+    }
+
+    private void initializeComponents() {
         searchField = createSearchField();
         loginButton = createLoginButton();
         registerButton = createRegisterButton();
         usernameLabel = createUsernameLabel();
         userMenu = createUserMenu();
-        initializePanel();
     }
 
     private void initializePanel() {
+        setupPanelProperties();
+        addLogoPanel();
+        addSearchPanel();
+        addAuthPanel();
+    }
+
+    private void setupPanelProperties() {
         setBackground(HEADER_BACKGROUND);
         setPreferredSize(new Dimension(1200, HEADER_HEIGHT));
         setLayout(new BorderLayout());
-        
+    }
+
+    private void addLogoPanel() {
         add(createLogoPanel(), BorderLayout.WEST);
+    }
+
+    private void addSearchPanel() {
         add(createSearchPanel(), BorderLayout.CENTER);
+    }
+
+    private void addAuthPanel() {
         authPanel = createAuthPanel();
         add(authPanel, BorderLayout.EAST);
     }
 
     private JPanel createLogoPanel() {
+        JPanel logoPanel = createBaseLogoPanel();
+        try {
+            logoPanel.add(createLogoLabel());
+        } catch (Exception e) {
+            handleLogoError(e);
+        }
+        return logoPanel;
+    }
+
+    private JPanel createBaseLogoPanel() {
         JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         logoPanel.setOpaque(false);
-        
-        try {
-            String path = "resources/CarHubLogo.png";
-            ImageIcon originalIcon = new ImageIcon(path);
-            Image scaledImage = originalIcon.getImage().getScaledInstance(
-                -1, 
-                LOGO_HEIGHT,
-                Image.SCALE_SMOOTH
-            );
-            ImageIcon scaledIcon = new ImageIcon(scaledImage);
-            JLabel logoLabel = new JLabel(scaledIcon);
-            logoLabel.setBorder(BorderFactory.createEmptyBorder(-30, 20, 0, 0));
-            logoPanel.add(logoLabel);
-        } catch (Exception e) {
-            System.err.println("Error loading logo: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
         return logoPanel;
+    }
+
+    private JLabel createLogoLabel() {
+        ImageIcon scaledIcon = loadAndScaleLogo();
+        JLabel logoLabel = new JLabel(scaledIcon);
+        logoLabel.setBorder(BorderFactory.createEmptyBorder(-30, 20, 0, 0));
+        return logoLabel;
+    }
+
+    private ImageIcon loadAndScaleLogo() {
+        String path = "resources/CarHubLogo.png";
+        ImageIcon originalIcon = new ImageIcon(path);
+        Image scaledImage = originalIcon.getImage().getScaledInstance(
+            -1, 
+            LOGO_HEIGHT,
+            Image.SCALE_SMOOTH
+        );
+        return new ImageIcon(scaledImage);
+    }
+
+    private void handleLogoError(Exception e) {
+        System.err.println("Error loading logo: " + e.getMessage());
+        e.printStackTrace();
     }
 
     private JTextField createSearchField() {
@@ -83,25 +117,39 @@ public class HeaderPanel extends JPanel {
 
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        searchPanel.setOpaque(false);
-        searchPanel.setBorder(BorderFactory.createEmptyBorder((HEADER_HEIGHT - SEARCH_FIELD_HEIGHT) / 2, 0, 0, 0));
-        
-        JButton searchButton = new JButton("Search");
-        searchButton.setPreferredSize(new Dimension(100, SEARCH_FIELD_HEIGHT));
-        searchButton.setBackground(Color.WHITE);
-        searchButton.setFocusPainted(false);
-        searchButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        searchButton.addActionListener(e -> {
-            if (!getSearchText().isBlank()) {
-                control.search(getSearchText());
-            } else {
-                showValidationError("Ingresa algo para buscar");
-            }
-        });
-        
+        configureSearchPanel(searchPanel);
         searchPanel.add(searchField);
-        searchPanel.add(searchButton);
+        searchPanel.add(createSearchButton());
         return searchPanel;
+    }
+
+    private void configureSearchPanel(JPanel searchPanel) {
+        searchPanel.setOpaque(false);
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(
+            (HEADER_HEIGHT - SEARCH_FIELD_HEIGHT) / 2, 0, 0, 0
+        ));
+    }
+
+    private JButton createSearchButton() {
+        JButton searchButton = new JButton("Search");
+        configureSearchButton(searchButton);
+        searchButton.addActionListener(e -> handleSearch());
+        return searchButton;
+    }
+
+    private void configureSearchButton(JButton button) {
+        button.setPreferredSize(new Dimension(100, SEARCH_FIELD_HEIGHT));
+        button.setBackground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.PLAIN, 14));
+    }
+
+    private void handleSearch() {
+        if (!getSearchText().isBlank()) {
+            control.search(getSearchText());
+        } else {
+            showValidationError("Ingresa algo para buscar");
+        }
     }
 
     private void showValidationError(String message) {
@@ -113,38 +161,37 @@ public class HeaderPanel extends JPanel {
 
     private JButton createLoginButton() {
         JButton button = new JButton("Iniciar Sesión");
-        button.setPreferredSize(new Dimension(120, SEARCH_FIELD_HEIGHT));
-        button.setBackground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.PLAIN, 14));
+        configureAuthButton(button);
         button.addActionListener(e -> showLoginWindow());
         return button;
     }
 
     private JButton createRegisterButton() {
         JButton button = new JButton("Registrarse");
-        button.setPreferredSize(new Dimension(120, SEARCH_FIELD_HEIGHT));
-        button.setBackground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.PLAIN, 14));
+        configureAuthButton(button);
         button.addActionListener(e -> showRegisterWindow());
         return button;
     }
 
+    private void configureAuthButton(JButton button) {
+        button.setPreferredSize(new Dimension(120, SEARCH_FIELD_HEIGHT));
+        button.setBackground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.PLAIN, 14));
+    }
+
     private JPopupMenu createUserMenu() {
         JPopupMenu menu = new JPopupMenu();
-
-        JMenuItem myPostsItem = createMenuItem("Mis Publicaciones", e -> control.getMyListings());
-        JMenuItem deleteAccountItem = createMenuItem("Eliminar Usuario", e -> handleDeleteAccount());
-        JMenuItem logoutItem = createMenuItem("Cerrar Sesión", e -> setLoggedIn(false, null));
-
-        menu.add(myPostsItem);
-        menu.addSeparator();
-        menu.add(deleteAccountItem);
-        menu.addSeparator();
-        menu.add(logoutItem);
-
+        addMenuItems(menu);
         return menu;
+    }
+
+    private void addMenuItems(JPopupMenu menu) {
+        menu.add(createMenuItem("Mis Publicaciones", e -> control.getMyListings()));
+        menu.addSeparator();
+        menu.add(createMenuItem("Eliminar Usuario", e -> handleDeleteAccount()));
+        menu.addSeparator();
+        menu.add(createMenuItem("Cerrar Sesión", e -> setLoggedIn(false, null)));
     }
 
     private JMenuItem createMenuItem(String text, java.awt.event.ActionListener action) {
@@ -154,6 +201,13 @@ public class HeaderPanel extends JPanel {
     }
 
     private void handleDeleteAccount() {
+        if (confirmDeleteAccount()) {
+            control.deleteAccount();
+            setLoggedIn(false, null);
+        }
+    }
+
+    private boolean confirmDeleteAccount() {
         int result = JOptionPane.showConfirmDialog(
             this,
             "Estas seguro que deseas eliminar tu cuenta? perderas toda tu informacion",
@@ -161,19 +215,24 @@ public class HeaderPanel extends JPanel {
             JOptionPane.YES_NO_OPTION,
             JOptionPane.WARNING_MESSAGE
         );
-        if (result == JOptionPane.YES_OPTION) {
-            control.deleteAccount();
-            setLoggedIn(false, null);
-        }
+        return result == JOptionPane.YES_OPTION;
     }
 
     private JLabel createUsernameLabel() {
         JLabel label = new JLabel("User: Guest");
+        configureUsernameLabel(label);
+        addUsernameLabelListener(label);
+        return label;
+    }
+
+    private void configureUsernameLabel(JLabel label) {
         label.setForeground(TEXT_COLOR);
         label.setFont(new Font("Arial", Font.PLAIN, 16));
         label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 30));
         label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+    }
+
+    private void addUsernameLabelListener(JLabel label) {
         label.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -182,17 +241,25 @@ public class HeaderPanel extends JPanel {
                 }
             }
         });
-        
-        return label;
     }
 
     private JPanel createAuthPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        configureAuthPanel(panel);
+        addAuthButtons(panel);
+        return panel;
+    }
+
+    private void configureAuthPanel(JPanel panel) {
         panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(
+            (HEADER_HEIGHT - SEARCH_FIELD_HEIGHT) / 2, 0, 0, 20
+        ));
+    }
+
+    private void addAuthButtons(JPanel panel) {
         panel.add(loginButton);
         panel.add(registerButton);
-        panel.setBorder(BorderFactory.createEmptyBorder((HEADER_HEIGHT - SEARCH_FIELD_HEIGHT) / 2, 0, 0, 20));
-        return panel;
     }
 
     private void showLoginWindow() {
@@ -211,47 +278,41 @@ public class HeaderPanel extends JPanel {
 
     public void setLoggedIn(boolean loggedIn, String username) {
         isLoggedIn = loggedIn;
+        updateAuthPanel(loggedIn, username);
+    }
+
+    private void updateAuthPanel(boolean loggedIn, String username) {
         authPanel.removeAll();
-        
         if (loggedIn) {
             usernameLabel.setText("User: " + username);
             authPanel.add(usernameLabel);
         } else {
-            authPanel.add(loginButton);
-            authPanel.add(registerButton);
+            addAuthButtons(authPanel);
         }
-        
         authPanel.revalidate();
         authPanel.repaint();
     }
-
 
     public String getSearchText() {
         return searchField.getText();
     }
 
     public void addMyPostsListener(java.awt.event.ActionListener listener) {
-        Component[] components = userMenu.getComponents();
-        for (Component component : components) {
-            if (component instanceof JMenuItem && ((JMenuItem) component).getText().equals("Mis Publicaciones")) {
-                ((JMenuItem) component).addActionListener(listener);
-            }
-        }
+        addMenuItemListener("Mis Publicaciones", listener);
     }
 
     public void addDeleteAccountListener(java.awt.event.ActionListener listener) {
-        Component[] components = userMenu.getComponents();
-        for (Component component : components) {
-            if (component instanceof JMenuItem && ((JMenuItem) component).getText().equals("Eliminar Usuario")) {
-                ((JMenuItem) component).addActionListener(listener);
-            }
-        }
+        addMenuItemListener("Eliminar Usuario", listener);
     }
 
     public void addLogoutListener(java.awt.event.ActionListener listener) {
+        addMenuItemListener("Cerrar Sesión", listener);
+    }
+
+    private void addMenuItemListener(String menuItemText, java.awt.event.ActionListener listener) {
         Component[] components = userMenu.getComponents();
         for (Component component : components) {
-            if (component instanceof JMenuItem && ((JMenuItem) component).getText().equals("Cerrar Sesión")) {
+            if (component instanceof JMenuItem && ((JMenuItem) component).getText().equals(menuItemText)) {
                 ((JMenuItem) component).addActionListener(listener);
             }
         }

@@ -41,47 +41,69 @@ public class AsidePanel extends JPanel {
     }
 
     private void initializePanel() {
+        setupPanelProperties();
+        addTitleSection();
+        addFilterSections();
+        addButtonSection();
+    }
+
+    private void setupPanelProperties() {
         setBackground(new Color(220, 220, 220));
         setPreferredSize(new Dimension(PANEL_WIDTH, PANEL_HEIGHT));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
-        // Título
-        JLabel titleLabel = new JLabel("Filtros");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    }
+
+    private void addTitleSection() {
+        JLabel titleLabel = createTitleLabel();
         add(Box.createVerticalStrut(20));
         add(titleLabel);
         add(Box.createVerticalStrut(30));
-        
-        // Filtro de Precio
+    }
+
+    private JLabel createTitleLabel() {
+        JLabel titleLabel = new JLabel("Filtros");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return titleLabel;
+    }
+
+    private void addFilterSections() {
+        addPriceFilterSection();
+        add(Box.createVerticalStrut(20));
+        addModelFilterSection();
+        add(Box.createVerticalGlue());
+    }
+
+    private void addPriceFilterSection() {
         add(createFilterSection(
             "Rango de Precio",
             minPriceField,
             maxPriceField,
             priceFilterCheck
         ));
-        
-        add(Box.createVerticalStrut(20));
-        
-        // Filtro de Modelo
+    }
+
+    private void addModelFilterSection() {
         add(createFilterSection(
             "Rango de Modelo",
             minModelField,
             maxModelField,
             modelFilterCheck
         ));
-        
-        // Espacio flexible para empujar el botón hacia abajo
-        add(Box.createVerticalGlue());
-        
-        // Panel para el botón
+    }
+
+    private void addButtonSection() {
+        JPanel buttonPanel = createButtonPanel();
+        add(buttonPanel);
+        add(Box.createVerticalStrut(20));
+    }
+
+    private JPanel createButtonPanel() {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(220, 220, 220));
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.add(filterButton);
-        
-        add(buttonPanel);
-        add(Box.createVerticalStrut(20));
+        return buttonPanel;
     }
 
     private JTextField createTextField() {
@@ -100,46 +122,70 @@ public class AsidePanel extends JPanel {
     }
 
     private JPanel createFilterSection(String title, JTextField minField, JTextField maxField, JCheckBox checkBox) {
+        JPanel panel = createBasePanel();
+        panel.add(createHeaderPanel(checkBox));
+        panel.add(createFieldsPanel(minField, maxField));
+        return panel;
+    }
+
+    private JPanel createBasePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(220, 220, 220));
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Título y checkbox
+        return panel;
+    }
+
+    private JPanel createHeaderPanel(JCheckBox checkBox) {
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(220, 220, 220));
         headerPanel.add(checkBox);
-        panel.add(headerPanel);
-        
-        // Campos de rango
+        return headerPanel;
+    }
+
+    private JPanel createFieldsPanel(JTextField minField, JTextField maxField) {
         JPanel fieldsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         fieldsPanel.setBackground(new Color(220, 220, 220));
         
-        JLabel minLabel = new JLabel("Min:");
-        minLabel.setFont(FIELD_FONT);
-        JLabel maxLabel = new JLabel("Max:");
-        maxLabel.setFont(FIELD_FONT);
+        JLabel minLabel = createLabel("Min:");
+        JLabel maxLabel = createLabel("Max:");
         
         fieldsPanel.add(minLabel);
         fieldsPanel.add(minField);
         fieldsPanel.add(maxLabel);
         fieldsPanel.add(maxField);
         
-        panel.add(fieldsPanel);
-        
-        return panel;
+        return fieldsPanel;
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(FIELD_FONT);
+        return label;
     }
 
     private JButton createFilterButton() {
         JButton button = new JButton("Filtrar");
+        configureButtonSize(button);
+        styleButton(button);
+        addHoverEffect(button);
+        return button;
+    }
+
+    private void configureButtonSize(JButton button) {
         button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
+    }
+
+    private void styleButton(JButton button) {
         button.setBackground(BUTTON_COLOR);
         button.setForeground(Color.WHITE);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+    }
+
+    private void addHoverEffect(JButton button) {
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(BUTTON_COLOR.darker());
@@ -149,8 +195,6 @@ public class AsidePanel extends JPanel {
                 button.setBackground(BUTTON_COLOR);
             }
         });
-        
-        return button;
     }
 
     private void setupFilterListeners() {
@@ -175,7 +219,7 @@ public class AsidePanel extends JPanel {
         });
     }
 
-    // Getters para los valores de los filtros
+    
     public Double getMinPrice() {
         return getDoubleValue(minPriceField);
     }
